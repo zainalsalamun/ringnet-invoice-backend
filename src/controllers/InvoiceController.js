@@ -174,12 +174,10 @@ export const removeInvoice = async (req, res) => {
   }
 };
 
-// ✅ UPLOAD bukti transfer + auto set tanggal_pembayaran
 export const uploadProof = async (req, res) => {
   try {
     const { id } = req.params;
 
-    // Pastikan file ada
     if (!req.file) {
       return res.status(400).json({
         success: false,
@@ -187,11 +185,10 @@ export const uploadProof = async (req, res) => {
       });
     }
 
-    // Gunakan path yang konsisten untuk frontend
     const buktiPath = `/uploads/invoices/${req.file.filename}`;
     const tanggalPembayaran = new Date();
 
-    // Pastikan invoice-nya ada dulu
+    // Cek invoice
     const checkInvoice = await pool.query(
       "SELECT id FROM invoices WHERE id = $1",
       [id]
@@ -202,7 +199,7 @@ export const uploadProof = async (req, res) => {
         .json({ success: false, message: "Invoice tidak ditemukan" });
     }
 
-    // Update DB
+    // Update 
     const result = await pool.query(
       `UPDATE invoices 
        SET bukti_transfer = $1,
@@ -213,7 +210,6 @@ export const uploadProof = async (req, res) => {
       [buktiPath, tanggalPembayaran, id]
     );
 
-    // ✅ Kirim respons sukses
     res.status(200).json({
       success: true,
       message: "Bukti pembayaran berhasil diupload",
@@ -227,3 +223,25 @@ export const uploadProof = async (req, res) => {
     });
   }
 };
+
+// GET grafik bulanan
+export const getInvoiceStats = async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT 
+        TO_CHAR(tanggal_invoice, 'YYYY-MM') AS bulan,
+        COUNT(*) AS total_invoice,
+        SUM(CASE WHEN status_pembayaran = 'Lunas' THEN 1 ELSE 0 END) AS total_lunas,
+        SUM(total) AS total_nominal
+      FROM invoices
+      GROUP BY 1
+      ORDER BY 1 ASC
+    `);
+
+    res.json({ success: true, data: result.rows });
+  } catch (err) {
+    console.error("Error getInvoiceStats:", err);
+    res.status(500).json({ success: false, message: "Gagal ambil statistik bulanan" });
+  }
+};
+
