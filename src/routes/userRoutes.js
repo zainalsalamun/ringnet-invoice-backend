@@ -5,6 +5,8 @@ import {
   addUser,
   editUser,
   deleteUser,
+  updatePassword
+
 } from "../controllers/userController.js";
 import { verifyToken, authorizeRoles } from "../middleware/authMiddleware.js";
 
@@ -15,5 +17,7 @@ router.get("/", verifyToken, authorizeRoles("admin"), getUsers);
 router.post("/", verifyToken, authorizeRoles("admin"), addUser);
 router.put("/:id", verifyToken, authorizeRoles("admin"), editUser);
 router.delete("/:id", verifyToken, authorizeRoles("admin"), deleteUser);
+
+router.put("/:id/password", verifyToken, updatePassword);
 
 export default router;
