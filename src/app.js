@@ -10,8 +10,20 @@ import { fileURLToPath } from "url";
 
 dotenv.config();
 const app = express();
+app.set("trust proxy", 1);
 
-app.use(cors());
+app.use(
+  cors({
+    origin: "*", 
+    methods: ["GET", "POST", "PUT", "DELETE"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",   
+    ],
+  })
+);
+
+
 app.use(express.json());
 
 const __filename = fileURLToPath(import.meta.url);
@@ -23,10 +35,10 @@ app.get("/", (req, res) => {
   res.send("✅ Ringnet Invoice API Running");
 });
 
+
 app.use("/api/invoices", invoiceRoutes);
 app.use("/api/customers", customerRoute);
 app.use("/api/auth", authRoutes);
 app.use("/api/users", userRoutes);
 
 export default app;
-
